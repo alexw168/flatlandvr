@@ -1,0 +1,89 @@
+#
+# Makefile
+#
+# K. L. Summers
+# Jan 17, 2000
+#
+# Converted to Makefile.in 25-Nov-00.  KLS
+#
+# These are the source files (*.c, not *.h)
+SOURCE = LocomotionClient.cc locowin.cc
+
+# Name of the library to be produced
+LIBNAME =  libLocomotionClient.so
+
+#-- There should be no need to modify below this line --#
+
+OPSYS = @OPSYS@
+FLLIBDIR=../../lib/@OPSYS@
+
+# make 64 bit binaries if the machine supports it
+#ifeq ($(OPSYS),IRIX64)
+##  BITS = -64  #temporarilly disabled because sound is 32
+#  COPTS += $(BITS)
+#  LINKOPTS += $(BITS)
+#endif
+
+COMPILER = @CXX@
+COPTS = @CXXFLAGS@ @DEFS@ -c -I/usr/local/include/SDL -I/usr/local/include -I. -I../../include -I../../src $(SHADOWBLENDING)
+LINKER =  @CXX@
+LINKOPTS =
+INCLUDE = @X_CFLAGS@ @CPPFLAGS@ @SDL_CFLAGS@ @glut_CFLAGS@
+LDLIBS = -L$(FLLIBDIR) @glut_LIBS@ @LDFLAGS@ @X_PRE_LIBS@ @X_LIBS@ @X_EXTRA_LIBS@ @LIBS@ @SDL_LIBS@
+
+# use the SDL libraries if available
+ifeq (@have_sdl@, 1)
+  # TODO: fix it so I'm not repeating the "-lSDL" here
+  LDLIBS += -L/usr/local/lib
+  LDLIBS += -lSDLnet -lSDL
+endif
+
+include ../../make-include
+
+OBJECT = ${SOURCE:.cc=.o}
+
+LINK_DEPS = $(OBJECT)
+
+
+# dependancy compilation rule (makes a .d for every .c, which we include later)
+%.d:%.cc
+	$(SHELL) -ec '$(COMPILER) -M $(COPTS) $(CFLAGS) $(CC_SYSOPT) \
+	$(INCLUDE) $< | sed '\''s/\($*\)\.o[ :]*/\1.o $@ : /g'\'' > $@; \
+	[ -s $@ ] || rm -f $@'
+
+# Main compilation rule
+%.o:%.cc
+	$(COMPILER) $(COPTS) $(CFLAGS) $(CC_SYSOPT) $(INCLUDE) $<
+
+
+all:	$(FLLIBDIR)/$(LIBNAME) Makefile
+
+# include the mini-makefiles (*.d) for dependancy rules
+ifneq ($(MAKECMDGOALS),clean)
+ ifneq ($(MAKECMDGOALS),veryclean)
+  ifneq ($(MAKECMDGOALS),opsys)
+   include $(OBJECT:.o=.d)
+  endif
+ endif
+endif
+
+# link rule
+$(LIBNAME): $(LINK_DEPS)
+	$(COMPILER) $(LINKOPTS) -shared -o $@ $(OBJECT) $(LINKSDLNET)
+
+# and copy the executable to the top dir
+$(FLLIBDIR)/$(LIBNAME): $(LIBNAME)
+	cp $< $@
+
+opsys:
+	echo $(OPSYS)
+	echo $(COMPILER) $(COPTS)
+
+clean:
+	-$(RM) $(OBJECT) $(LIBNAME) so_locations
+
+veryclean: clean
+	-$(RM) $(OBJECT:.o=.d)
+
+Makefile: Makefile.in ../../config.status
+	../../config.status

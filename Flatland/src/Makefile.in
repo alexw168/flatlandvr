@@ -1,0 +1,133 @@
+#
+# Makefile
+#
+# K. L. Summers
+# Jan 17, 2000
+#
+# Converted to Makefile.in Nov 15, 2000, KLS
+#
+
+OPSYS = @OPSYS@
+FLLIBDIR = ../lib/@OPSYS@
+TLFLLIBDIR = @FLTOPDIR@/lib/@OPSYS@
+RM = rm -f
+
+# make 64 bit binaries if the machine supports it
+#ifeq ($(OPSYS),IRIX64)
+##  BITS = -64   #temporarilly disabled because sound libs are 32 bit
+#  COPTS += $(BITS)
+#  LINKOPTS += $(BITS)
+#endif
+
+COMPILER = @CXX@
+COPTS = @CXXFLAGS@ @DEFS@ -D$(OPSYS) -c -I/usr/local/include/SDL -I/usr/local/include -I. -Isdl_netlib -I../include $(SHADOWBLENDING)
+LINKER =  @CXX@
+LINKOPTS =
+INCLUDE = @X_CFLAGS@ @CPPFLAGS@ @SDL_CFLAGS@ @glut_CFLAGS@
+LDLIBS =  -L$(FLLIBDIR) @glut_LIBS@ @LDFLAGS@ @X_PRE_LIBS@ @X_LIBS@ @X_EXTRA_LIBS@ @LIBS@ @SDL_LIBS@
+
+ifeq ($(OPSYS), IRIX64)
+  LDLIBS += -Wl,-rpath,$(TLFLLIBDIR)
+  COPTS += -fullwarn -LANG:std -LANG:ansi-for-init-scope=ON
+  COPTS += -DUSE_OLD_CPP_HEADERS
+endif
+
+ifeq ($(OPSYS), IRIX)
+  LDLIBS += -Wl,-rpath,$(TLFLLIBDIR)
+  COPTS += -fullwarn -LANG:std -LANG:ansi-for-init-scope=ON
+  COPTS += -DUSE_OLD_CPP_HEADERS
+endif
+
+ifeq ($(OPSYS), Linux)
+  LDLIBS += -Wl,-rpath,$(TLFLLIBDIR)
+  COPTS += -Wall
+endif
+
+# use the SDL libraries if available
+ifeq (@have_sdl@, 1)
+  # TODO: fix it so I'm not repeating the "-lSDL" here
+  LDLIBS += -L/usr/local/lib
+  LDLIBS += -lSDLnet -lSDL
+endif
+
+LIBSRC = 2D_interactors.c def_logo.c dll_funcs.c flatland_logo.c \
+         graph_funcs.c graphics_loop.c read_config.c shadows.c aux_funcs.c \
+         graphics_funcs.c dist_funcs.c mtbuf.c genexc.c ctmutex.c \
+         intersect.c 3D_controls.c glutmenu.c sound_funcs.c sound_thread.c \
+         sound_client.c  ReadWindowDefinition.c flatland_thread.c euler.c \
+	 usr_mtbuf.c collab_funcs.c C_compatability.c hash.c
+
+SOURCE = Flatland.c $(LIBSRC) 
+
+LIBOBJ = ${LIBSRC:.c=.o}
+OBJECT = ${SOURCE:.c=.o}
+
+LINK_DEPS = Flatland.o libflatland.so
+
+# dependancy compilation rule (makes a .d for every .c, which we include later)
+# TODO: see about automating CFLAGS (in this usage) and CC_SYSOPT
+%.d:%.c
+	$(SHELL) -ec '$(COMPILER) -M $(COPTS) $(CFLAGS) $(CC_SYSOPT) \
+	$(INCLUDE) $< | sed '\''s/\($*\)\.o[ :]*/\1.o $@ : /g'\'' > $@; \
+	[ -s $@ ] || $(RM) -f $@'
+
+# Main compilation rule
+%.o:%.c
+	$(COMPILER) $(COPTS) $(CFLAGS) $(CC_SYSOPT) $(INCLUDE) $<
+
+DEFALL = $(FLLIBDIR)/SDLnetlib $(FLLIBDIR)/libflatland.so ../Flatland ../Flatland.$(OPSYS)
+
+all:	$(DEFALL) Makefile
+
+# include the mini-makefiles (*.d) for dependancy rules
+ifneq ($(MAKECMDGOALS),clean)
+ ifneq ($(MAKECMDGOALS),veryclean)
+  ifneq ($(MAKECMDGOALS),opsys)
+   include $(OBJECT:.o=.d)
+  endif
+ endif
+endif
+
+# link rule
+Flatland: $(LINK_DEPS)
+	$(LINKER) $(LINKOPTS) $(LINK_DEPS) $(LDLIBS) -o Flatland
+
+# and copy the executable to the top dir
+../Flatland: Flatland
+	cp $< $@
+
+# twice
+../Flatland.$(OPSYS): Flatland
+	cp $< $@
+
+$(FLLIBDIR)/SDLnetlib:
+ifeq (@have_sdl@,1)
+	$(MAKE) -C sdl_netlib Flatland_all
+endif
+
+libflatland.so: $(LIBOBJ)
+	$(COMPILER) $(LINKOPTS) -shared -o $@ $(LIBOBJ)
+
+$(FLLIBDIR)/libflatland.so: libflatland.so
+	cp $< $@
+
+opsys:
+	@echo Operating system = $(OPSYS)
+	@echo SDL available = @have_sdl@
+	@echo Compile line = $(COMPILER) $(COPTS)
+	@echo Link line = $(LINKER) $(LINKOPTS)
+
+clean:
+ifeq (@have_sdl@,1)
+	-$(MAKE) -i -C sdl_netlib clean
+endif
+	-$(RM) $(OBJECT) Flatland
+	-$(RM) libflatland.so so_locations
+	-$(RM) core
+
+veryclean:
+	-$(RM) $(OBJECT:.o=.d)
+	-$(MAKE) clean
+
+Makefile: Makefile.in ../config.status
+	../config.status

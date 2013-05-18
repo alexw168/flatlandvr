@@ -1,0 +1,31 @@
+#
+# Makefile to do make in all subdirectories of this one
+#
+# Converted to Makefile.in 25-Nov-00:  KLS
+#
+
+SUBDIRS = $(shell ls | grep -v CVS | grep -v Makefile)
+
+all: $(SUBDIRS)
+
+$(SUBDIRS): force
+	$(MAKE) -C $@
+
+clean:
+	-$(shell for subdir in $(SUBDIRS); \
+        do cd $$subdir; \
+        $(MAKE) clean; \
+        cd -; \
+        done)
+
+veryclean:
+	-$(shell for subdir in $(SUBDIRS); \
+        do cd $$subdir; \
+        $(MAKE) veryclean; \
+        cd -; \
+        done)
+
+opsys:
+	echo $(SUBDIRS)
+
+force: ;

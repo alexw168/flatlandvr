@@ -1,0 +1,9 @@
+BeginUserApp
+ name string FlatlandGraph
+ dllloc string lib/IRIX64
+ dllname string libDisplayFlatlandTree.so
+ connect string Earth
+ universe string standard
+ nparams int 1
+ scale float 1.0
+End

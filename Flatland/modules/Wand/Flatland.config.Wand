@@ -1,0 +1,62 @@
+BeginBaseApp
+# This handles the transformations between the RightWand and the Vessel
+ name string RightWandTransformationNode
+ dllloc string lib/IRIX64
+ dllname string libTransformationNode.so
+ connect string TrackerClient
+ universe string standard
+ nparams int 7
+ x float 0.35
+ y float -0.65
+ z float -0.2
+ tracker_client string TrackerClient
+ transducer int 1
+ move_child int 1
+ use_tracking int 1
+End
+BeginBaseApp
+# This is the Right Wand
+ name string RightWand
+ dllloc string lib/IRIX64
+ dllname string libWand.so
+ connect string RightWandTransformationNode
+ universe string standard
+ nparams int 6
+ hand int 1
+ head int 0
+ button_client string ButtonClient
+ top int 4
+ middle int 5
+ bottom int 3
+End
+BeginBaseApp
+# This handles the transformations between the LeftWand and the Vessel
+ name string LeftWandTransformationNode
+ dllloc string lib/IRIX64
+ dllname string libTransformationNode.so
+ connect string TrackerClient
+ universe string standard
+ nparams int 7
+ x float -0.35
+ y float -0.65
+ z float -0.2
+ tracker_client string TrackerClient
+ transducer int 2
+ move_child int 1
+ use_tracking int 1
+End
+BeginBaseApp
+# This is the Left Wand
+ name string LeftWand
+ dllloc string lib/IRIX64
+ dllname string libWand.so
+ connect string LeftWandTransformationNode
+ universe string standard
+ nparams int 6
+ hand int -1
+ head int 0
+ button_client string ButtonClient
+ top int 1
+ middle int 2
+ bottom int 0
+End

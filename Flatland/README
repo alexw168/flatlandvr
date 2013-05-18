@@ -1,0 +1,68 @@
+
+                                 Flatland
+                                     D
+
+Flatland is a virtual environment for the development of scientific and
+information visualizations.  It uses a dynamic application loading scheme to
+allow all aspects of the VE to be loaded and unloaded at will.  
+
+Some base and example applications can be found in the ./modules directory.
+User written modules should be put in the ./usr_modules directory.  
+Utilities and function collections that are used by other modules, but do not
+themselves produce objects should be placed in the ./services directory.
+
+Installation
+
+Short version: Unpack the base code and (optionally) unpack the user modules
+into the Flatland directory created by unpacking the base code.  Then
+
+  autoconf
+  ./configure
+  make
+  make serv
+  make modules_all
+
+Alternatively, all of this can be accomplished with the command
+
+  make all
+
+
+Long version:  Same as above, with a few notes.
+
+Flatland requires autoconf version 2.13.  Specifically, autoconf version 2.50
+or higher will not work.  This is due to a bug in th 2.50 series of autoconf.
+You can find out the version you are using with the command
+"autoconf --version".
+
+The make utility used for Flatland must be compatible with GNU make.  On some
+systems (noteably SGI IRIX) the default make utility is not GNU.  Often the
+GNU utilities can be accessed by using "gmake" in place of "make".
+
+If the same distribution tree is used on multiple platforms, or even on
+identical platforms that are configured differently, the "config.cache" file
+will have to be erased and ./configure run again before the make will succeed.
+If the results of the system command "uname" is different than the last time
+the make was run, the make will automatically take care of the reconfigure.  
+
+The Simple Direct-media Layer (SDL) libraries are optional for Flatland.  They
+are used to drive some external socket programs, such as the sound server.  If
+this isn't installed in one of the default places (/usr/local/lib, /usr/lib,
+etc.) the exact location may have to be specfied.  This is done with
+command line options to ./configure:
+
+  --with-SDL-library[=PATH]
+  --with-SDL-includes[=PATH]
+
+This will force ./configure to look for the SDL libraries and includes in the
+specified places.
+
+Likewise, the glut library and includes can be specified using
+
+  --with-glut-library[=PATH]
+  --with-glut-includes[=PATH]
+
+Keep in mind that the glut includes path should *not* include the final "GL".
+So, for instance, if the glut.h path were "/usr/local/lib/GL/glut.h" then the 
+./configure parameter for it would be "--with-glut-includes=/usr/local/lib".
+
+For more information see the "Guide to Flatland D."

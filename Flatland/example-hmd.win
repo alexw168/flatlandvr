@@ -1,0 +1,77 @@
+# start in full screen mode?
+full_screen 0
+
+# use stereo?
+stereo 0
+
+# normalize normal vectors?
+normalize 1
+
+# track head position as if in a cave?
+fixed_viewing_planes 0
+
+# is stereo being used with left and right windows?
+passive_stereo_via_windows 0
+
+# is stereo being used with left and right viewports?
+passive_stereo_via_viewports 0
+
+# if using windows for stereo which windows are they?
+left_window 0
+right_window 0
+
+# define the parameters of the first window (#0)
+beginWindow
+
+# coordinates on the screen for the upper left corner of the window
+	x 0
+	y 0
+	
+# if using viewports for stereo which viewports are they?
+	left_viewport 0
+	right_viewport 0
+	
+# define the parameters of the first viewport (#0)
+	beginViewport
+
+# where in the virtual environment is this viewport
+
+# start with the lower left corner
+		x0 -0.9238
+		y0 -0.6928
+		z0 -2.0
+
+# then the lower right corner
+		x1 0.9238
+		y1 -0.6928
+		z1 -2.0
+
+# then the upper right corner
+		x2 0.9238
+		y2 0.6928
+		z2 -2.0
+
+# now what are te near and far values of the viewing frustum?
+		near 0.2
+		far 7000.0
+		
+# how does the head need to be turned to face down the normal of the screen?
+		yaw 0.0
+		pitch 0.0
+		roll 0.0
+		
+# where is the lower left corner of the viewport (relative to the lower
+# left corner of the window)
+		x 0
+		y 0
+		
+# what is the size of the viewport?
+		width 640
+		height 480
+		
+# done with this viewport (#0)
+	endViewport
+	
+#done with this window (#0)
+endWindow
+

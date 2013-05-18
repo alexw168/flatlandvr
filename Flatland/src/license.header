@@ -1,0 +1,13 @@
+/*
+Flatland.cpp  Main program for Flatland.  Does init and spawns sound & vis
+threads.
+
+Copyright (C) 2002, University of New Mexico.
+
+*/
+
+/* 
+ * Maintenance history
+ *
+ * Created: 1-13-00
+ */

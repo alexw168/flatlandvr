@@ -1,0 +1,47 @@
+#
+# Makefile for SDL's example network library
+#
+# 22-Nov-00: Converted to a Makefile.in.  KLS
+
+###########################################################################
+#
+# Some consistent rules for building C++ files:
+
+.SUFFIXES: .cpp
+
+.cpp.o:
+	$(CXX) $(CPPFLAGS) -I/usr/include/SDL -c $<
+
+###########################################################################
+
+# The library to be built
+LIB = libSDLnet.a
+TOPLIB=../../lib/@OPSYS@/$(LIB)
+INC=SDLnet.h
+TOPINC=../../include/$(INC)
+LIBOBJS = SDLnet.o SDLnetselect.o SDLnetTCP.o SDLnetUDP.o
+
+# The demos to be built
+TARGET = chat chatd
+USEINET = true
+HDRS = 
+LIBS = -lGUI -L. -lSDLnet -lstdc++
+SUBDIRS = 
+SDL_CFLAGS = @SDL_CFLAGS@
+SDL_LIBS = @SDL_LIBS@
+
+Flatland_all: $(TOPLIB) $(TOPINC)
+
+$(TOPLIB): $(LIB)
+	cp $< $@
+
+$(TOPINC): $(INC)
+	cp $< $@
+
+include GNUmake
+
+chat chat.exe: $(GUILIB)/libGUI.a $(LIB) chat.o
+chatd chatd.exe: $(LIB) chatd.o
+
+$(GUILIB)/libGUI.a:
+	$(MAKE) -C $(GUILIB)

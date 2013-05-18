@@ -1,0 +1,345 @@
+BeginSystem
+ name string Appville
+ universe string standard
+# configure the graphics
+ window_def_filename string example.win
+# window_def_filename string example-single.win
+# window_def_filename string example-hmd.win
+# window_def_filename string example-active-stereo.win
+# window_def_filename string example-viewport-stereo.win
+# configure the sound server 
+ sound_server string localhost
+ maxapps int 500
+ maxshadowgraphs int 2
+ maxsounds int 100
+ max_open-close_sounds int 3
+# configure the names of some important "internal" objects
+ left_eye_name string LeftPupil
+ right_eye_name string RightPupil
+ center_eye_name string CenterPupil
+ head_tracker_name string HeadTransformationNode
+ tracker_client_name string TrackerClient
+ head_name string Head
+ glut_library string libglut.so.3
+ joystick_device string /dev/input/js0
+End
+BeginBaseApp
+# provides access to the button server
+ name string ButtonClient
+ build_dir string modules/ButtonClient/
+ dllloc string lib/$SYSNAME
+ dllname string libButtonClient.so
+ connect string CenterOfTheUniverse
+ universe string standard
+ nparams int 1
+ server_address string voice
+End
+BeginBaseApp
+# This provides access to position tracking using flock-of-birds
+ name string TrackerClient
+ build_dir string modules/FlockTrackerClient/
+ dllloc string lib/$SYSNAME
+ dllname string libFlockTrackerClient.so
+ connect string CenterOfTheUniverse
+ universe string standard
+ nparams int 10
+ port string /dev/ttyd2
+ transducers int 3
+ hemisphere string lower
+ measurement_rate float 112.9
+ x float 0.0
+ y float 0.0
+ z float 0.0
+ roll float 0.0
+ pitch float 0.0
+ yaw float 0.0
+End
+BeginBaseApp
+# This handles the transformations between the Head and the Vessel
+ name string HeadTransformationNode
+ build_dir string modules/TransformationNode/
+ dllloc string lib/$SYSNAME
+ dllname string libTransformationNode.so
+ connect string TrackerClient
+ universe string standard
+ nparams int 10
+# specify the default position of the head
+ x float 0.0
+ y float -0.2
+ z float 0.3
+ roll float 0.0
+ pitch float 27.0
+ yaw float 0.0
+# specify the tracker to use
+ tracker_client string TrackerClient
+ transducer int 0
+ move_child int 1
+ use_tracking int 1
+End
+BeginBaseApp
+ name string Head
+ build_dir string modules/Head_Eyes/
+ dllloc string lib/$SYSNAME
+ dllname string libHeadAndEyes.so
+ connect string HeadTransformationNode
+ universe string standard
+ nparams int 10
+# ** these settings are for use with the VR8 HMD as
+# ** configured in the UNM vis lab.
+# unfortunately the head tracker can not be placed 
+# at the "center" of the head, so adjustments must
+# be made to accomidate the tracking technology
+ head_pitch float -27.0
+ head_y float -0.07
+ head_z float -0.05
+# In order for stereo displays to work it is neccesary
+# to seperate the viewpoints for the eyes, and turn them
+# slightly inward so they "look" at a point in front of them.
+# (eyes are placed relative to the "center" of the head,
+# which is arbitrarily place at about the point 
+# between the ears, a good place to orient audio.)
+ left_eye_x float -0.05
+ left_eye_z float -0.05
+ left_eye_yaw float -0.3
+ right_eye_x float 0.05
+ right_eye_z float -0.05
+ right_eye_yaw float 0.3
+ center_eye_z float -0.05
+End
+BeginBaseApp
+# this is how you get around in flatland (you are inside the Vessel)
+ name string Vessel
+ build_dir string modules/DodecahedronVessel/
+ dllloc string lib/$SYSNAME
+ dllname string libDodecahedronVessel.so
+ connect string TrackerClient
+ universe string standard
+ nparams int 1
+ y float -0.6
+End
+BeginBaseApp
+# graphics version of the console in the UNM vis-lab
+ name string Console
+ build_dir string modules/UNMConsole/
+ dllloc string lib/$SYSNAME
+ dllname string libconsole.so
+ connect string Vessel
+ universe string standard
+ nparams int 1
+ y float -0.14
+End
+BeginBaseApp
+# This provides access to locomotion tracking, i.e. this lets the 
+# vessel drive around in the world.
+# this application can be changed to allow for 
+# different motion metafors or inputs, like
+# keyboards, mouse, joystick, or spaceball...
+ name string LocomotionClient
+ build_dir string modules/LocomotionClient/
+ dllloc string lib/$SYSNAME
+ dllname string libLocomotionClient.so
+ connect string Vessel
+ universe string standard
+ nparams int 10
+# this application allows driving via the wands, or with
+# the mouse using an auxiliary window
+ left_wand string LeftWand
+ left_wand_tracker string LeftWandTransformationNode
+ right_wand string RightWand
+ right_wand_tracker string RightWandTransformationNode
+# what is its placement relative to the vessel...
+ x float 0.0
+ y float 0.0
+ z float 0.0
+ roll float 0.0
+ pitch float 0.0
+ yaw float 0.0
+End
+BeginBaseApp
+# This handles the transformations between the Vessel and the Earth
+ name string VesselTransformationNode
+ build_dir string modules/TransformationNode/
+ dllloc string lib/$SYSNAME
+ dllname string libTransformationNode.so
+ connect string LocomotionClient
+ universe string standard
+ nparams int 10
+# give the vessel a default position and orientation
+ x float 0.0
+ y float 15.0
+ z float 35.0
+ roll flaot 0.0
+ pitch float 0.0
+ yaw float 0.0
+# specify where position data is to be obtained
+ tracker_client string LocomotionClient
+ transducer int 0
+ move_child int 0
+ use_tracking int 1
+End
+BeginBaseApp
+# this is the basic environment you work in
+ name string Earth
+ build_dir string modules/Earth/
+ dllloc string lib/$SYSNAME
+ dllname string libearth.so
+ connect string VesselTransformationNode
+ universe string standard
+ nparams int 1
+ airport_fn string modules/Earth/Airport2.txt
+End
+BeginBaseApp
+# This handles the transformations between the RightWand and the Vessel
+ name string RightWandTransformationNode
+ build_dir string modules/TransformationNode/
+ dllloc string lib/$SYSNAME
+ dllname string libTransformationNode.so
+ connect string TrackerClient
+ universe string standard
+ nparams int 10
+# give the wand a default position
+ x float 0.35
+ y float -0.65
+ z float -0.2
+ roll float 0.0
+ pitch float 0.0
+ yaw float 0.0
+# specify what tracker to use
+ tracker_client string TrackerClient
+ transducer int 1
+ move_child int 1
+ use_tracking int 1
+End
+BeginBaseApp
+# This is the Right Wand
+ name string RightWand
+ build_dir string modules/Wand/
+ dllloc string lib/$SYSNAME
+ dllname string libWand.so
+ connect string RightWandTransformationNode
+ universe string standard
+ nparams int 10
+# specify where the files with the geomety of the wands are.
+ right_hand_data string modules/Wand/RightHand.dat
+ left_hand_data string modules/Wand/LeftHand.dat
+ handle_data string modules/Wand/WandHandle.dat
+ head_data string modules/Wand/WandDefaultHead.dat
+# specify the hand to use (right)
+ hand int 1
+# specify the head to display on the wand (only default right now)
+ head int 0
+# tell the wand where it can find information about its buttons
+ button_client string ButtonClient
+ top int 4
+ middle int 5
+ bottom int 3
+End
+BeginBaseApp
+# This handles the transformations between the LeftWand and the Vessel
+ name string LeftWandTransformationNode
+ build_dir string modules/TransformationNode/
+ dllloc string lib/$SYSNAME
+ dllname string libTransformationNode.so
+ connect string TrackerClient
+ universe string standard
+ nparams int 10
+# give the wand a default position
+ x float -0.35
+ y float -0.65
+ z float -0.2
+ roll float 0.0
+ pitch float 0.0
+ yaw float 0.0
+# specify what tracker to use
+ tracker_client string TrackerClient
+ transducer int 2
+ move_child int 1
+ use_tracking int 1
+End
+BeginBaseApp
+# This is the Left Wand
+ name string LeftWand
+ build_dir string modules/Wand/
+ dllloc string lib/$SYSNAME
+ dllname string libWand.so
+ connect string LeftWandTransformationNode
+ universe string standard
+ nparams int 10
+# specify where the files with the geomety of the wands are.
+ right_hand_data string modules/Wand/RightHand.dat
+ left_hand_data string modules/Wand/LeftHand.dat
+ handle_data string modules/Wand/WandHandle.dat
+ head_data string modules/Wand/WandDefaultHead.dat
+# specify the hand to use (left)
+ hand int -1
+# specify the head to display on the wand (only default right now)
+ head int 0
+# tell the wand where it can find information about its buttons
+ button_client string ButtonClient
+ top int 1
+ middle int 2
+ bottom int 0
+End
+BeginUserApp
+# this provides stars in the sky
+ name string Stars
+ build_dir string modules/Stars/
+ dllloc string lib/$SYSNAME
+ dllname string libstars.so
+ connect string Earth
+ universe string standard
+ nparams int 3
+ nbr_of_stars int 4000
+ radius float 6000.0
+ max_intensity float 0.3
+End
+BeginUserApp
+# this displays a tree representation of the flatland graph
+# from an arbitrary root selectable while running
+ name string FlatlandGraph
+ build_dir string modules/DisplayFlatlandTree/
+ dllloc string lib/$SYSNAME
+ dllname string libDisplayFlatlandTree.so
+ connect string Earth
+ universe string standard
+ nparams int 1
+ scale float 1.0
+End
+BeginUserApp
+# a simple example application
+ name string Simple
+ build_dir string modules/Simple/
+ dllloc string lib/$SYSNAME
+ dllname string libSimple.so
+ connect string Earth
+ universe string standard
+ nparams int 2
+ cube_size float 5.0
+ cube_sound int 0
+End
+BeginUserApp
+# a simple example that circles and makes sounds
+ name string CircleSimple
+ build_dir string usr_modules/CircleSimple/
+ dllloc string lib/$SYSNAME
+ dllname string libCircleSimple.so
+ connect string Earth
+ universe string standard
+ nparams int 7
+ data_file string usr_modules/CircleSimple/colors.dat
+ cube_sound int 1
+ cube_size float 5.0
+ cube_pitch float 0.0
+ cube_yaw float 0.0
+ cube_roll float 0.0
+ circle_dist float 10.0
+End
+EOF
+
+Note: The parameters passed to the App DLLs must be placed in the section after the 
+declaration of the number of parameters. That is, after the "nparams int 4" type
+statement. In addition, the parameters must be the last set of entries in the App
+section. No other types of declarations are permitted after the app parameters.
+The name of the parameter maybe anything, var# is only an example. 
+
+TPC 1/12/00

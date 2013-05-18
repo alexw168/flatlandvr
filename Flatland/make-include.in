@@ -1,0 +1,74 @@
+# 
+# Input file to be included in all usr_modules Makefiles
+#
+# K. L. Summers
+# April 6, 2001
+#
+OPSYS = @OPSYS@
+FLLIBDIR = @FLTOPDIR@/lib/@OPSYS@
+FLTOPDIR = @FLTOPDIR@
+FLINCDIR = @FLTOPDIR@/include
+FLSERVDIR = @FLTOPDIR@/services
+
+# make 64 bit binaries if the machine supports it
+#ifeq ($(OPSYS),IRIX64)
+#  BITS = -64  #temporarilly disabled because sound is 32
+#  COPTS += $(BITS)
+#  LINKOPTS += $(BITS)
+#endif
+
+# compiler selection
+CPP_COMPILER = @CXX@
+C_COMPILER =  @CC@
+
+# C and C++ options
+ALL_COPTS = @DEFS@ -D$(OPSYS) -c -I/usr/local/include/SDL -I/usr/local/include -I. \
+            -I@FLTOPDIR@/src -Isdl_netlib -I@FLTOPDIR@/include $(SHADOWBLENDING)
+CPP_COPTS = @CXXFLAGS@ $(ALL_COPTS)
+C_COPTS = @CFLAGS@ $(ALL_COPTS)
+
+ifeq ($(OPSYS),IRIX64)
+ALL_COPTS += -DUSE_OLD_CPP_HEADERS
+endif
+
+ifeq ($(OPSYS),IRIX)
+ALL_COPTS += -DUSE_OLD_CPP_HEADERS
+endif
+
+# Linker
+CPP_LINKER = @CXX@
+C_LINKER = @CC@
+
+# Includes
+ALL_INCLUDE = @X_CFLAGS@ @SDL_CFLAGS@ @glut_CFLAGS@
+CPP_INCLUDE = @CPPFLAGS@ $(ALL_INCLUDE)
+C_INCLUDE = $(ALL_INCLUDE)
+
+# Libraries
+LDLIBS = -L$(FLLIBDIR) @glut_LIBS@ @LDFLAGS@ @X_PRE_LIBS@ @X_LIBS@ \
+         @X_EXTRA_LIBS@ @LIBS@ @SDL_LIBS@
+INTERSECTLIB = -L$(FLLIBDIR) -lBasicIntersection
+
+# use the SDL libraries if available
+ifeq (@have_sdl@, 1)
+  # TODO: fix it so I'm not repeating the "-lSDL" here
+  LDLIBS += -L/usr/local/lib
+  LDLIBS += -lSDLnet -lSDL
+endif
+
+OBJECT = ${SOURCE:.c=.o}
+
+LINK_DEPS = $(OBJECT)
+
+# select a language and set the appropriate vars
+ifeq ($(LANG), "C")
+  COMPILER = $(C_COMPILER)
+  COPTS = $(C_COPTS)
+  LINKER = $(C_LINKER)
+  INCLUDE = $(C_INCLUDE)
+else
+  COMPILER = $(CPP_COMPILER)
+  COPTS = $(CPP_COPTS)
+  LINKER = $(CPP_LINKER)
+  INCLUDE = $(CPP_INCLUDE)
+endif

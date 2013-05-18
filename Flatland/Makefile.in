@@ -1,0 +1,136 @@
+# Flatland makefile 
+#
+# created 17-Jan-00, KLS
+# converted to Makefile.in for autoconf 15-Nov-00, KLS
+# TODO: make modules_veryclean and serv_veryclean work
+
+# make our variables visible to children makes
+export
+
+CURRENT_ARCH = $(shell cat current_arch 2> /dev/null)
+OPSYS = $(shell uname)
+RM = rm -f
+
+default: Makefile include/flatland_app.h include/euler.h include/collab_shared.h
+
+# if we have changed architectures, reconfigure
+ifneq ($(CURRENT_ARCH),$(OPSYS))
+	$(RM) -f config.cache
+	./configure
+	echo `uname` > current_arch
+endif
+	$(MAKE) -C src
+
+include/flatland_app.h: src/gheader.h
+	#@LN_S@ -f src/gheader.h include/flatland_app.h
+	cp -f src/gheader.h include/flatland_app.h
+
+include/euler.h: src/euler.h
+	cp -f src/euler.h include/euler.h
+
+include/collab_shared.h: src/collab_shared.h
+	cp -f src/collab_shared.h include/collab_shared.h
+	
+# Clean for the top level directory *only*
+topclean:
+	$(RM) Flatland core
+
+# Clean
+clean:
+ifneq ($(CURRENT_ARCH),$(OPSYS))
+	$(RM) -f config.cache
+	./configure
+	echo `uname` > current_arch
+endif
+	$(MAKE) -i -C src clean
+
+# Very Clean.  Deletes the *.d (dependency) files.  necessary when switching OSs
+veryclean:
+ifneq ($(CURRENT_ARCH),$(OPSYS))
+	$(RM) -f config.cache
+	./configure
+	echo `uname` > current_arch
+endif
+	$(RM) src/*.d
+	$(MAKE) -C src veryclean
+
+# make everything.  src, services, modules, and usr_modules, in the right order
+all:
+ifneq ($(CURRENT_ARCH),$(OPSYS))
+	$(RM) -f config.cache
+	./configure
+	echo `uname` > current_arch
+endif   
+	$(MAKE) default
+	$(MAKE) serv
+	$(MAKE) modules_all
+
+modules_all:
+ifneq ($(CURRENT_ARCH),$(OPSYS))
+	$(RM) -f config.cache
+	./configure
+	echo `uname` > current_arch
+endif
+	$(MAKE) -C modules
+	$(MAKE) -C usr_modules
+
+modules_clean:
+ifneq ($(CURRENT_ARCH),$(OPSYS))
+	$(RM) -f config.cache
+	./configure
+	echo `uname` > current_arch
+endif
+	$(MAKE) -C modules clean
+	$(MAKE) -C usr_modules clean
+
+modules_veryclean: 
+ifneq ($(CURRENT_ARCH),$(OPSYS))
+	$(RM) -f config.cache
+	./configure
+	echo `uname` > current_arch
+endif
+	-$(RM) modules/*/*.d
+	-$(RM) usr_modules/*/*.d
+	$(MAKE) -C modules veryclean
+	$(MAKE) -C usr_modules veryclean
+
+serv:
+ifneq ($(CURRENT_ARCH),$(OPSYS))
+	$(RM) -f config.cache
+	./configure
+	echo `uname` > current_arch
+endif
+	$(MAKE) -C services
+
+serv_clean:
+ifneq ($(CURRENT_ARCH),$(OPSYS))
+	$(RM) -f config.cache
+	./configure
+	echo `uname` > current_arch
+endif
+	$(MAKE) -C services clean
+
+serv_veryclean: 
+ifneq ($(CURRENT_ARCH),$(OPSYS))
+	$(RM) -f config.cache
+	./configure
+	echo `uname` > current_arch
+endif
+	-$(RM) services/*/*.d
+	$(MAKE) -C services veryclean
+
+# configure file autoupdate
+configure: configure.in
+	autoconf
+	$(RM) -f config.cache
+
+Makefile: Makefile.in config.status
+	./config.status
+	echo `uname` > current_arch
+
+config.status: configure
+	./config.status --recheck
+
+# Makefile debug info
+opsys:
+	$(MAKE) -C src opsys
